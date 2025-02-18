@@ -13,12 +13,14 @@ async def on_ready():
 
 @client.event
 async def on_message(message):
+    # Prevent the bot from replying to itself
     if message.author == client.user:
         return
-    
+
+    # Only respond to "give me a joke" in server text channels
     if message.content.lower() == "give me a joke":
-        response = requests.get("https://official-joke-api.appspot.com/jokes/random")
+        response = requests.get("https://official-joke-api.appspot.com/random_joke")
         joke = response.json()
         await message.channel.send(f"{joke['setup']} - {joke['punchline']}")
-
+        
 client.run(TOKEN)
