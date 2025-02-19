@@ -12,9 +12,11 @@ async def on_message(message):
     # Ignore messages from the bot itself
     if message.author == client.user:
         return
-    
-    # Send a test response to every message (this will show if the bot can post to channels)
-    await message.channel.send("Bot is working!")
+
+    # Respond only if the message starts with "~tell me a joke"
+    if message.content.lower().startswith("~tell me a joke"):
+        # Send a response (this is where you can add a joke from an API)
+        await message.channel.send("Here's a joke for you! 😂")
 
 TOKEN = os.getenv("DISCORD_TOKEN")
 client.run(TOKEN)
