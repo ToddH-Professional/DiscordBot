@@ -3,7 +3,6 @@ import os
 import requests
 import asyncio
 import random
-from trivia_game import TriviaGame
 from discord.ext import commands
 
 # Load your bot token and API keys
@@ -42,6 +41,8 @@ async def get_quote(ctx):
     """Fetch a random quote and send it with the author."""
     quote, author = fetch_quote()
     await ctx.send(f'"{quote}" - {author}')
+
+
 
 #--------FUNCTIONS------------#
 
@@ -93,35 +94,9 @@ def fetch_quote():
 
     except requests.exceptions.RequestException as e:
         return f"An error occurred: {e}", ""
-
-#------------------The trivia game  #------------------
-
-# # A dictionary to hold trivia sessions
-trivia_sessions = {}
-
-# Start the trivia game with the `~trivia` command
-@bot.command()
-async def trivia(ctx):
-    """Starts a solo trivia session."""
-    if ctx.guild.id in trivia_sessions:
-        await ctx.send("A trivia session is already in progress. Use ~trivia-start to begin the game.")
-    else:
-        trivia_sessions[ctx.guild.id] = TriviaGame(ctx.guild.id)
-        await ctx.send("Trivia game has started! Type ~trivia-start to begin playing.")
-
-# Command to start the solo trivia game
-@bot.command()
-async def trivia_start(ctx):
-    """Starts the trivia game and prompts the player to choose a category."""
-    if ctx.guild.id not in trivia_sessions:
-        await ctx.send("No trivia game is active. Type ~trivia to start a new game.")
-        return
-
-    session = trivia_sessions[ctx.guild.id]
     
-    if not session.game_started:
-        await session.start_game(ctx)
-    else:
-        await ctx.send("The game has already started!")
+#--------TRIVIA game is below#--------#
+##Jeopardy like game.  Can be called with ~trivia    
+# A dictionary to hold trivia sessions
 
 bot.run(TOKEN)
