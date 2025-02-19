@@ -1,11 +1,7 @@
 import discord
 import os
-import requests
 
-TOKEN = os.getenv("DISCORD_TOKEN")
-
-intents = discord.Intents.default()
-client = discord.Client(intents=intents)
+client = discord.Client(intents=discord.Intents.default())
 
 @client.event
 async def on_ready():
@@ -13,14 +9,12 @@ async def on_ready():
 
 @client.event
 async def on_message(message):
-    # Prevent the bot from replying to itself
+    # Ignore messages from the bot itself
     if message.author == client.user:
         return
+    
+    # Send a test response to every message (this will show if the bot can post to channels)
+    await message.channel.send("Bot is working!")
 
-    # Only respond to "give me a joke" in server text channels
-    if message.content.lower() == "give me a joke":
-        response = requests.get("https://official-joke-api.appspot.com/random_joke")
-        joke = response.json()
-        await message.channel.send(f"{joke['setup']} - {joke['punchline']}")
-        
+TOKEN = os.getenv("DISCORD_TOKEN")
 client.run(TOKEN)
