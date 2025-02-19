@@ -115,16 +115,30 @@ async def trivia_join(ctx):
 
     # Send a message telling the player they joined the game
     if len(game.players) == 1:
-        await ctx.send(f"{ctx.author.name}, you've started a new trivia game!")
+        await ctx.send(f"{ctx.author.name}, you've started a new trivia game! Waiting for more players to join. Use `~trivia-join` to join the game.")
     else:
-        await ctx.send(f"{ctx.author.name}, you've joined the trivia game! Total players: {len(game.players)}")
+        await ctx.send(f"{ctx.author.name}, you've joined the trivia game! Total players: {len(game.players)}. More players can still join using `~trivia-join`.")
+
+@bot.command(name="trivia-join")
+async def trivia_join_more(ctx):
+    """Allow more players to join the game."""
+    guild_id = ctx.guild.id
+    
+    if guild_id not in trivia_sessions:
+        await ctx.send("No active trivia game to join. Please use `~trivia` to start a new game.")
+        return
+    
+    game = trivia_sessions[guild_id]
+    game.add_player(ctx.author.name)  # Add the player by name
+
+    await ctx.send(f"{ctx.author.name} has joined the game! Total players: {len(game.players)}")
 
 @bot.command(name="trivia-start")
 async def trivia_start(ctx):
-    """Start the trivia game."""
+    """Start the trivia game once there are enough players."""
     guild_id = ctx.guild.id
     if guild_id not in trivia_sessions or len(trivia_sessions[guild_id].players) < 2:
-        await ctx.send("You need at least 2 players to start the game.")
+        await ctx.send("You need at least 2 players to start the game. Have more players join with `~trivia-join`.")
         return
 
     game = trivia_sessions[guild_id]
@@ -152,7 +166,6 @@ async def trivia_answer(ctx, answer):
         else:
             await ctx.send(f"Sorry, {ctx.author.name}. The correct answer was: {game.correct_answer}")
     else:
-        await ctx.send("The game hasn't started yet. Use ~trivia-start to begin.")
-   
+        await ctx.send("The game hasn't started yet. Use `~trivia-start` to begin.")  
 
 bot.run(TOKEN)
