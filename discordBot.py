@@ -47,15 +47,18 @@ def get_joke():
     except requests.exceptions.RequestException as e:
         return f"An error occurred: {e}"
 
-# Function to get a fact from the randomuselessfact API
+# Function to get a fact from the new Fact API
 def get_fact():
-    url = "https://randomuselessfact.appspot.com/random.json?language=en"
+    url = "https://api.api-ninjas.com/v1/facts"
+    headers = {
+        "X-Api-Key": "Ft5P+32YODA0dCCPgMxgAg==QWoO7wDSpBnK5B1m",  # You need to sign up for an API key from API Ninjas
+    }
     try:
-        response = requests.get(url)
+        response = requests.get(url, headers=headers)
         response.raise_for_status()  # Raise an error for bad responses
         fact_data = response.json()
 
-        return fact_data["text"]
+        return fact_data[0]["fact"]
 
     except requests.exceptions.RequestException as e:
         return f"An error occurred: {e}"
