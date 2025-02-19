@@ -4,7 +4,7 @@ import requests
 import asyncio
 import random
 from trivia_game import TriviaGame
-from discord.ext import commands
+from discord.ext import commands, tasks
 
 # Load your bot token and API keys
 TOKEN = os.getenv("DISCORD_TOKEN")
