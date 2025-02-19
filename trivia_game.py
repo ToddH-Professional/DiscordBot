@@ -1,6 +1,7 @@
 import random
 import requests
 import asyncio
+import html
 
 class TriviaGame:
     def __init__(self, guild_id):
@@ -18,7 +19,7 @@ class TriviaGame:
             self.score[player] = 0  # Initialize the player's score
         except Exception as e:
             print(f"Error adding player {player}: {e}")
-            
+
     async def start_reminder(self, ctx):
         """Send a reminder message 5 minutes after first player joined, if game hasn't started."""
         while not self.game_started:  # Only remind if the game hasn't started yet
@@ -43,10 +44,16 @@ class TriviaGame:
         """Fetch a trivia question and prepare the options."""
         try:
             question_data = self.fetch_question()
+            
+            if not question_data or "question" not in question_data:
+                raise ValueError("Invalid question data received")
+
             self.current_question = question_data["question"]
             self.correct_answer = question_data["correct_answer"]
+
+            # Combine correct and incorrect answers, then shuffle
             options = question_data["incorrect_answers"] + [self.correct_answer]
-            random.shuffle(options)  # Shuffle options so the answer is not always last
+            random.shuffle(options)  # Shuffle so correct answer is not always last
 
             return self.current_question, options
         except Exception as e:
@@ -60,7 +67,19 @@ class TriviaGame:
             response = requests.get(url)
             response.raise_for_status()  # Raise an error for bad responses
             data = response.json()
-            return data["results"][0]
+            
+            if "results" not in data or not data["results"]:
+                raise ValueError("No results returned from API")
+
+            question_data = data["results"][0]
+            
+            # Unescape question and answers
+            question_data["question"] = html.unescape(question_data["question"])
+            question_data["correct_answer"] = html.unescape(question_data["correct_answer"])
+            question_data["incorrect_answers"] = [html.unescape(ans) for ans in question_data["incorrect_answers"]]
+            
+            return question_data
+
         except requests.exceptions.RequestException as e:
             print(f"Error fetching trivia question: {e}")
             return {"question": "Sorry, there was an error fetching a question.", 
