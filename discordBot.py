@@ -51,7 +51,7 @@ def get_joke():
 def get_fact():
     url = "https://api.api-ninjas.com/v1/facts"
     headers = {
-        "X-Api-Key": "Ft5P+32YODA0dCCPgMxgAg==QWoO7wDSpBnK5B1m",  # You need to sign up for an API key from API Ninjas
+        "X-Api-Key": os.getenv("FACT_API_KEY"),  # Load the API key from the environment variable
     }
     try:
         response = requests.get(url, headers=headers)
