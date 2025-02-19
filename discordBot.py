@@ -18,12 +18,12 @@ bot = commands.Bot(command_prefix="~", intents=intents)
 async def on_ready():
     print(f'Logged in as {bot.user}')
 
-@bot.command(name="help")
-async def help_command(ctx):
+@bot.command(name="options")
+async def options_command(ctx):
     """Send the list of available commands."""
     command_list = "\n".join([f"~{command.name}" for command in bot.commands])
-    help_message = f"**Available Commands:**\n{command_list}"
-    await ctx.send(help_message)
+    options_message = f"**Available Commands:**\n{command_list}"
+    await ctx.send(options_message)
 
 @bot.command(name="joke")
 async def get_joke(ctx):
@@ -92,5 +92,4 @@ def fetch_quote():
     except requests.exceptions.RequestException as e:
         return f"An error occurred: {e}", ""
     
-bot.remove_command('help')  # Optional: remove default help command
 bot.run(TOKEN)
