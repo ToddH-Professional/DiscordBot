@@ -103,11 +103,21 @@ trivia_sessions = {}
 async def trivia_join(ctx):
     """Allow players to join the trivia game."""
     guild_id = ctx.guild.id
+    
+    # Check if there is already an ongoing trivia session for the guild
     if guild_id not in trivia_sessions:
-        trivia_sessions[guild_id] = TriviaGame(guild_id)
-    trivia_sessions[guild_id].add_player(ctx.author.name)  # Add the player by name
+        trivia_sessions[guild_id] = TriviaGame(guild_id)  # Start a new game if none exists
+    
+    game = trivia_sessions[guild_id]
+    
+    # Add the player to the game
+    game.add_player(ctx.author.name)  # Add the player by name
 
-    await ctx.send(f"{ctx.author.name} has joined the trivia game!")
+    # Send a message telling the player they joined the game
+    if len(game.players) == 1:
+        await ctx.send(f"{ctx.author.name}, you've started a new trivia game!")
+    else:
+        await ctx.send(f"{ctx.author.name}, you've joined the trivia game! Total players: {len(game.players)}")
 
 @bot.command(name="trivia-start")
 async def trivia_start(ctx):
@@ -143,6 +153,6 @@ async def trivia_answer(ctx, answer):
             await ctx.send(f"Sorry, {ctx.author.name}. The correct answer was: {game.correct_answer}")
     else:
         await ctx.send("The game hasn't started yet. Use ~trivia-start to begin.")
-    
+   
 
 bot.run(TOKEN)
