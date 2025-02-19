@@ -31,9 +31,9 @@ async def get_fact(ctx):
 
 @bot.command(name="quote")
 async def get_quote(ctx):
-    """Fetch a random quote and send it."""
-    quote = fetch_quote()
-    await ctx.send(quote)
+    """Fetch a random quote and send it with the author."""
+    quote, author = fetch_quote()
+    await ctx.send(f'"{quote}" - {author}')
 
 # Function to get a joke from the JokeAPI
 def fetch_joke():
@@ -78,9 +78,10 @@ def fetch_quote():
         response.raise_for_status()  # Raise an error for bad responses
         quote_data = response.json()
 
-        return quote_data[0]["quote"]
+        # Return the quote and author
+        return quote_data[0]["quote"], quote_data[0]["author"]
 
     except requests.exceptions.RequestException as e:
-        return f"An error occurred: {e}"
+        return f"An error occurred: {e}", ""
 
 bot.run(TOKEN)
