@@ -91,5 +91,6 @@ def fetch_quote():
 
     except requests.exceptions.RequestException as e:
         return f"An error occurred: {e}", ""
-
+    
+bot.remove_command('help')  # Optional: remove default help command
 bot.run(TOKEN)
