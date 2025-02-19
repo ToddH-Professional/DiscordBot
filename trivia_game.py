@@ -41,10 +41,10 @@ class TriviaGame:
             return None, None
 
     def ask_question(self):
-        """Fetch a trivia question and prepare the options."""
+        """Fetch a trivia question and prepare the options as a numbered list."""
         try:
             question_data = self.fetch_question()
-            
+
             if not question_data or "question" not in question_data:
                 raise ValueError("Invalid question data received")
 
@@ -55,10 +55,13 @@ class TriviaGame:
             options = question_data["incorrect_answers"] + [self.correct_answer]
             random.shuffle(options)  # Shuffle so correct answer is not always last
 
-            return self.current_question, options
+            # Format options with numbers
+            formatted_options = "\n".join([f"{i+1}. {option}" for i, option in enumerate(options)])
+
+            return self.current_question, formatted_options, options  # Return options separately for checking answers
         except Exception as e:
             print(f"Error asking question: {e}")
-            return None, []
+            return None, "", []
 
     def fetch_question(self):
         """Fetch a random trivia question from the API."""
