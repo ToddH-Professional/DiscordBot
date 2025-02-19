@@ -1,38 +1,42 @@
 import discord
 import os
 import requests
+from discord.ext import commands
 
+# Load your bot token and API keys
+TOKEN = os.getenv("DISCORD_TOKEN")
+FACT_API_KEY = os.getenv("FACT_API_KEY")
+
+# Set the command prefix to "~"
 intents = discord.Intents.default()
 intents.message_content = True  # Enable reading message content
 
-client = discord.Client(intents=intents)
+bot = commands.Bot(command_prefix="~", intents=intents)
 
-@client.event
+@bot.event
 async def on_ready():
-    print(f'Logged in as {client.user}')
+    print(f'Logged in as {bot.user}')
 
-@client.event
-async def on_message(message):
-    # Ignore messages from the bot itself
-    if message.author == client.user:
-        return
+@bot.command(name="joke")
+async def get_joke(ctx):
+    """Fetch a random programming joke and send it."""
+    joke = fetch_joke()
+    await ctx.send(joke)
 
-    # Check if the message is coming from a server channel (not DM)
-    if message.guild:
-        # Respond only if the message starts with "~tell me a joke"
-        if message.content.lower().startswith("~tell me a joke"):
-            # Call the joke API
-            joke = get_joke()
-            await message.channel.send(joke)
-        
-        # Respond only if the message starts with "~tell me a fact"
-        elif message.content.lower().startswith("~tell me a fact"):
-            # Call the fact API
-            fact = get_fact()
-            await message.channel.send(fact)
+@bot.command(name="fact")
+async def get_fact(ctx):
+    """Fetch a random fact and send it."""
+    fact = fetch_fact()
+    await ctx.send(fact)
+
+@bot.command(name="quote")
+async def get_quote(ctx):
+    """Fetch a random quote and send it."""
+    quote = fetch_quote()
+    await ctx.send(quote)
 
 # Function to get a joke from the JokeAPI
-def get_joke():
+def fetch_joke():
     url = "https://v2.jokeapi.dev/joke/Programming?type=single"  # Example API endpoint for programming jokes
     try:
         response = requests.get(url)
@@ -47,11 +51,11 @@ def get_joke():
     except requests.exceptions.RequestException as e:
         return f"An error occurred: {e}"
 
-# Function to get a fact from the new Fact API
-def get_fact():
+# Function to get a fact from the Fact API
+def fetch_fact():
     url = "https://api.api-ninjas.com/v1/facts"
     headers = {
-        "X-Api-Key": os.getenv("FACT_API_KEY"),  # Load the API key from the environment variable
+        "X-Api-Key": FACT_API_KEY,  # Load the API key from the environment variable
     }
     try:
         response = requests.get(url, headers=headers)
@@ -63,5 +67,20 @@ def get_fact():
     except requests.exceptions.RequestException as e:
         return f"An error occurred: {e}"
 
-TOKEN = os.getenv("DISCORD_TOKEN")
-client.run(TOKEN)
+# Function to get a random quote from the Ninja API
+def fetch_quote():
+    url = "https://api.api-ninjas.com/v1/quotes"
+    headers = {
+        "X-Api-Key": FACT_API_KEY,  # Load the API key from the environment variable
+    }
+    try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()  # Raise an error for bad responses
+        quote_data = response.json()
+
+        return quote_data[0]["quote"]
+
+    except requests.exceptions.RequestException as e:
+        return f"An error occurred: {e}"
+
+bot.run(TOKEN)
