@@ -99,29 +99,50 @@ def fetch_quote():
 # # A dictionary to hold trivia sessions
 trivia_sessions = {}
 
-# Start the trivia game with the `~trivia` command
-@bot.command()
-async def trivia(ctx):
-    """Starts a solo trivia session."""
-    if ctx.guild.id in trivia_sessions:
-        await ctx.send("A trivia session is already in progress. Use ~trivia-start to begin the game.")
-    else:
-        trivia_sessions[ctx.guild.id] = TriviaGame(ctx.guild.id)
-        await ctx.send("Trivia game has started! Type ~trivia-start to begin playing.")
+@bot.command(name="trivia")
+async def trivia_join(ctx):
+    """Allow players to join the trivia game."""
+    guild_id = ctx.guild.id
+    if guild_id not in trivia_sessions:
+        trivia_sessions[guild_id] = TriviaGame(guild_id)
+    trivia_sessions[guild_id].add_player(ctx.author.name)  # Add the player by name
 
-# Command to start the solo trivia game
-@bot.command()
+    await ctx.send(f"{ctx.author.name} has joined the trivia game!")
+
+@bot.command(name="trivia-start")
 async def trivia_start(ctx):
-    """Starts the trivia game and prompts the player to choose a category."""
-    if ctx.guild.id not in trivia_sessions:
-        await ctx.send("No trivia game is active. Type ~trivia to start a new game.")
+    """Start the trivia game."""
+    guild_id = ctx.guild.id
+    if guild_id not in trivia_sessions or len(trivia_sessions[guild_id].players) < 2:
+        await ctx.send("You need at least 2 players to start the game.")
         return
 
-    session = trivia_sessions[ctx.guild.id]
-    
-    if not session.game_started:
-        await session.start_game(ctx)
+    game = trivia_sessions[guild_id]
+    question, options = game.start_game()
+
+    if question:
+        await ctx.send(f"Question: {question}\nOptions: {', '.join(options)}")
     else:
-        await ctx.send("The game has already started!")
+        await ctx.send("There was an error starting the game.")
+
+@bot.command(name="answer")
+async def trivia_answer(ctx, answer):
+    """Check the player's answer."""
+    guild_id = ctx.guild.id
+    if guild_id not in trivia_sessions:
+        await ctx.send("No game is currently running.")
+        return
+
+    game = trivia_sessions[guild_id]
+    if game.game_started:
+        correct = game.correct_answer.lower() == answer.lower()
+        if correct:
+            game.score[ctx.author.name] += 1
+            await ctx.send(f"Correct, {ctx.author.name}! You have {game.score[ctx.author.name]} points.")
+        else:
+            await ctx.send(f"Sorry, {ctx.author.name}. The correct answer was: {game.correct_answer}")
+    else:
+        await ctx.send("The game hasn't started yet. Use ~trivia-start to begin.")
+    
 
 bot.run(TOKEN)
