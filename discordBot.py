@@ -101,25 +101,24 @@ trivia_sessions = {}
 
 @bot.command(name="trivia")
 async def trivia(ctx):
-    """Start a trivia game or join the existing one."""
+    """Start or join a trivia game."""
     channel_id = ctx.channel.id
     
-    if channel_id in trivia_sessions:
-        # Game is already running, add the player to the game
-        game = trivia_sessions[channel_id]
-        game.add_player(ctx.author.name)
-        await ctx.send(f"{ctx.author.name} joined the trivia game! Type `~trivia-start` to begin.")
-    else:
-        # Start a new trivia game
+    if channel_id not in trivia_sessions:
         trivia_sessions[channel_id] = TriviaGame(channel_id)
+        trivia_sessions[channel_id].add_player(ctx.author.name)
+        trivia_sessions[channel_id].start_time = asyncio.get_event_loop().time()  # Track the time when the first player joins
+        
+        await ctx.send(f"{ctx.author.name} started a new trivia game! Type `~trivia-start` to begin!")
+        
+        # Start the reminder for 5 minutes after the first player joins
+        bot.loop.create_task(trivia_sessions[channel_id].start_reminder(ctx))
+    else:
         game = trivia_sessions[channel_id]
         game.add_player(ctx.author.name)
-        await ctx.send(f"{ctx.author.name}, you've started a new trivia game! Type `~trivia-start` to begin.")
-    
-    # Start the reminder loop if the game has started
-    if not game.game_started:
-        send_reminder.start(ctx)  # Start reminder loop if game has not started
+        await ctx.send(f"{ctx.author.name} joined the trivia game! Type `~trivia-start` to begin!")
 
+# The trivia-start command to begin the game
 @bot.command(name="trivia-start")
 async def trivia_start(ctx):
     """Start the trivia game once the player is ready."""
@@ -130,45 +129,11 @@ async def trivia_start(ctx):
         return
     
     game = trivia_sessions[channel_id]
-    if len(game.players) < 1:
-        await ctx.send("You need at least 1 player to start the game. Have more players join with `~trivia`.")
-        return
-
-    # Start the trivia game
-    question, options = game.start_game()
-
-    if question:
+    
+    if len(game.players) > 0:  # Game can start with at least one player
+        question, options = game.start_game()
         await ctx.send(f"Question: {question}\nOptions: {', '.join(options)}")
     else:
-        await ctx.send("There was an error starting the game.")
-
-@tasks.loop(minutes=1)
-async def send_reminder(ctx):
-    """Send a reminder every minute that the game can start with `~trivia-start`."""
-    channel_id = ctx.channel.id
-    
-    # Only send reminder if game has not started yet
-    if channel_id in trivia_sessions and not trivia_sessions[channel_id].game_started:
-        await ctx.send(f"Reminder: {ctx.author.name}, type `~trivia-start` to begin the game!")
-
-@bot.command(name="answer")
-async def trivia_answer(ctx, answer):
-    """Check the player's answer."""
-    channel_id = ctx.channel.id
-    
-    if channel_id not in trivia_sessions:
-        await ctx.send("No game is currently running.")
-        return
-
-    game = trivia_sessions[channel_id]
-    if game.game_started:
-        correct = game.correct_answer.lower() == answer.lower()
-        if correct:
-            game.score[ctx.author.name] += 1
-            await ctx.send(f"Correct, {ctx.author.name}! You have {game.score[ctx.author.name]} points.")
-        else:
-            await ctx.send(f"Sorry, {ctx.author.name}. The correct answer was: {game.correct_answer}")
-    else:
-        await ctx.send("The game hasn't started yet. Use `~trivia-start` to begin.")
-
+        await ctx.send("There are no players in the trivia game yet. Please have someone join with `~trivia`.")
+        
 bot.run(TOKEN)

@@ -1,5 +1,6 @@
 import random
 import requests
+import asyncio
 
 class TriviaGame:
     def __init__(self, guild_id):
@@ -17,6 +18,16 @@ class TriviaGame:
             self.score[player] = 0  # Initialize the player's score
         except Exception as e:
             print(f"Error adding player {player}: {e}")
+            
+    async def start_reminder(self, ctx):
+        """Send a reminder message 5 minutes after first player joined, if game hasn't started."""
+        while not self.game_started:  # Only remind if the game hasn't started yet
+            if self.start_time is not None:
+                elapsed_time = asyncio.get_event_loop().time() - self.start_time
+                if elapsed_time >= 300:  # 300 seconds = 5 minutes
+                    await ctx.send(f"Reminder: The game has started! Type `~trivia-start` to begin the trivia!")
+                    self.start_time = None  # Stop sending reminders after the first one
+            await asyncio.sleep(60)  # Check every minute
 
     def start_game(self):
         """Start the trivia game."""
