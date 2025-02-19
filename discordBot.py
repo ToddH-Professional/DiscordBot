@@ -69,7 +69,8 @@ async def answer(ctx, number: int):
         await ctx.send("Correct! Well done.")
     else:
         await ctx.send(f"Sorry, that's incorrect. The correct answer was: {correct_answer}")
-
+# Hide the command from the help command
+answer.hidden = True
 
 #--------FUNCTIONS------------#
 
