@@ -1,6 +1,7 @@
 import discord
 import os
 import requests
+import random
 from discord.ext import commands
 
 # Load your bot token and API keys
@@ -43,6 +44,7 @@ async def get_quote(ctx):
 #Trivia!
 @bot.command(name='trivia')
 async def trivia(ctx):
+    """Fetch a random trivia question"""
     trivia_data = get_trivia()
     
     if trivia_data:
