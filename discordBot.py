@@ -116,8 +116,9 @@ async def trivia(ctx):
         game.add_player(ctx.author.name)
         await ctx.send(f"{ctx.author.name}, you've started a new trivia game! Type `~trivia-start` to begin.")
     
-    # Send a reminder every minute
-    send_reminder.start(ctx)
+    # Start the reminder loop if the game has started
+    if not game.game_started:
+        send_reminder.start(ctx)  # Start reminder loop if game has not started
 
 @bot.command(name="trivia-start")
 async def trivia_start(ctx):
@@ -146,8 +147,9 @@ async def send_reminder(ctx):
     """Send a reminder every minute that the game can start with `~trivia-start`."""
     channel_id = ctx.channel.id
     
-    if channel_id in trivia_sessions:
-        await ctx.send("Reminder: Type `~trivia-start` to begin the game.")
+    # Only send reminder if game has not started yet
+    if channel_id in trivia_sessions and not trivia_sessions[channel_id].game_started:
+        await ctx.send(f"Reminder: {ctx.author.name}, type `~trivia-start` to begin the game!")
 
 @bot.command(name="answer")
 async def trivia_answer(ctx, answer):
