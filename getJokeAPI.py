@@ -1,7 +1,10 @@
 import discord
 import os
 
-client = discord.Client(intents=discord.Intents.default())
+intents = discord.Intents.default()
+intents.message_content = True  # Enable reading message content
+
+client = discord.Client(intents=intents)
 
 @client.event
 async def on_ready():
@@ -14,9 +17,9 @@ async def on_message(message):
         return
 
     # Respond only if the message starts with "~tell me a joke"
-    if message.content.lower().startswith("~tell me a joke"):
-        # Send a response (this is where you can add a joke from an API)
-        await message.channel.send("Here's a joke for you! 😂")
+    if message.guild:  # Check if it's a server message (not DM)
+        if message.content.lower().startswith("~tell me a joke"):
+            await message.channel.send("Here's a joke for you! 😂")
 
 TOKEN = os.getenv("DISCORD_TOKEN")
 client.run(TOKEN)
