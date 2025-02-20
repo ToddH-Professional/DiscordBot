@@ -3,7 +3,6 @@ import os
 import requests
 import asyncio
 import random
-from trivia_game import TriviaGame
 from discord.ext import commands, tasks
 
 # Load your bot token and API keys
@@ -42,6 +41,13 @@ async def get_quote(ctx):
     """Fetch a random quote and send it with the author."""
     quote, author = fetch_quote()
     await ctx.send(f'"{quote}" - {author}')
+
+#Trivia!
+@bot.command(name="fact")
+async def get_trivia(ctx):
+    """Fetch a random trivia and send it."""
+    question = fetch_trivia()
+    await ctx.send(question)
 
 #--------FUNCTIONS------------#
 
@@ -94,46 +100,30 @@ def fetch_quote():
     except requests.exceptions.RequestException as e:
         return f"An error occurred: {e}", ""
 
-#------------------The trivia game  #------------------
+# Function to get a trivia question from the Open Trivia Database API
+def fetch_trivia():
+    url = "https://opentdb.com/api.php?amount=1&type=multiple"
+    
+    try:
+        response = requests.get(url)
+        response.raise_for_status()  # Raise an error for bad responses
+        trivia_data = response.json()
 
-# # A dictionary to hold trivia sessions
-trivia_sessions = {}
+        if trivia_data["response_code"] == 0:
+            question_data = trivia_data["results"][0]
+            question = question_data["question"]
+            correct_answer = question_data["correct_answer"]
+            all_answers = question_data["incorrect_answers"] + [correct_answer]
+            random.shuffle(all_answers)
 
-@bot.command(name="trivia")
-async def trivia(ctx):
-    """Start or join a trivia game."""
-    channel_id = ctx.channel.id
-    
-    if channel_id not in trivia_sessions:
-        trivia_sessions[channel_id] = TriviaGame(channel_id)
-        trivia_sessions[channel_id].add_player(ctx.author.name)
-        trivia_sessions[channel_id].start_time = asyncio.get_event_loop().time()  # Track the time when the first player joins
-        
-        await ctx.send(f"{ctx.author.name} started a new trivia game! Type `~trivia-start` to begin!")
-        
-        # Start the reminder for 5 minutes after the first player joins
-        bot.loop.create_task(trivia_sessions[channel_id].start_reminder(ctx))
-    else:
-        game = trivia_sessions[channel_id]
-        game.add_player(ctx.author.name)
-        await ctx.send(f"{ctx.author.name} joined the trivia game! Type `~trivia-start` to begin!")
+            choices = "\n".join([f"{i+1}. {answer}" for i, answer in enumerate(all_answers)])
 
-# The trivia-start command to begin the game
-@bot.command(name="trivia-start")
-async def trivia_start(ctx):
-    """Start the trivia game once the player is ready."""
-    channel_id = ctx.channel.id
+            return f"**Trivia Time!**\n{question}\n\n{choices}"
+
+        else:
+            return "Couldn't fetch a trivia question. Try again!"
+
+    except requests.exceptions.RequestException as e:
+        return f"An error occurred: {e}"
     
-    if channel_id not in trivia_sessions:
-        await ctx.send("No trivia game is running in this channel. Use `~trivia` to start a new game.")
-        return
-    
-    game = trivia_sessions[channel_id]
-    
-    if len(game.players) > 0:  # Game can start with at least one player
-        question, options = game.start_game()
-        await ctx.send(f"Question: {question}\nOptions: {', '.join(options)}")
-    else:
-        await ctx.send("There are no players in the trivia game yet. Please have someone join with `~trivia`.")
-        
 bot.run(TOKEN)
