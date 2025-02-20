@@ -43,7 +43,7 @@ async def get_quote(ctx):
     await ctx.send(f'"{quote}" - {author}')
 
 #Trivia!
-@bot.command(name="fact")
+@bot.command(name="trivia")
 async def get_trivia(ctx):
     """Fetch a random trivia and send it."""
     question = fetch_trivia()
