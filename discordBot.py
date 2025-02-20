@@ -43,14 +43,16 @@ async def get_quote(ctx):
     await ctx.send(f'"{quote}" - {author}')
 
 # Function to handle the `~trivia` command
-@bot.command()
+@bot.command(name="trivia")
 async def trivia(ctx):
+    """Fetch a random trivia question."""
     trivia_text = fetch_trivia()
     await ctx.send(trivia_text)
 
 # Function to handle the `~trivia-answer` command
-@bot.command()
+@bot.command(name="trivia-answer")
 async def trivia_answer(ctx):
+    """Fetch the answer the trivia question."""
     if current_answer:
         await ctx.send(f"The answer is: {current_answer}")
     else:
