@@ -46,6 +46,7 @@ async def get_quote(ctx):
 # Function to handle the `~trivia` command
 @bot.command()
 async def trivia(ctx):
+    """Fetch a random trivia and give answer in 15 seconds."""
     trivia_text = fetch_trivia()
     await ctx.send(trivia_text)
 
