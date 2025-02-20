@@ -1,8 +1,8 @@
 import discord
 import os
 import requests
-import asyncio
 import random
+import html
 from discord.ext import commands, tasks
 
 # Load your bot token and API keys
@@ -42,12 +42,19 @@ async def get_quote(ctx):
     quote, author = fetch_quote()
     await ctx.send(f'"{quote}" - {author}')
 
-#Trivia!
-@bot.command(name="fact")
-async def get_trivia(ctx):
-    """Fetch a random trivia and send it."""
-    question = fetch_trivia()
-    await ctx.send(question)
+# Function to handle the `~trivia` command
+@bot.command()
+async def trivia(ctx):
+    trivia_text = fetch_trivia()
+    await ctx.send(trivia_text)
+
+# Function to handle the `~trivia-answer` command
+@bot.command()
+async def trivia_answer(ctx):
+    if current_answer:
+        await ctx.send(f"The answer is: {current_answer}")
+    else:
+        await ctx.send("No trivia question has been asked yet!")
 
 #--------FUNCTIONS------------#
 
@@ -100,7 +107,6 @@ def fetch_quote():
     except requests.exceptions.RequestException as e:
         return f"An error occurred: {e}", ""
 
-# Function to get a trivia question from the Open Trivia Database API
 def fetch_trivia():
     url = "https://opentdb.com/api.php?amount=1&type=multiple"
     
@@ -111,14 +117,19 @@ def fetch_trivia():
 
         if trivia_data["response_code"] == 0:
             question_data = trivia_data["results"][0]
-            question = question_data["question"]
-            correct_answer = question_data["correct_answer"]
-            all_answers = question_data["incorrect_answers"] + [correct_answer]
+            question = html.unescape(question_data["question"])  # Unescape HTML entities in the question
+            correct_answer = html.unescape(question_data["correct_answer"])  # Unescape HTML entities in the correct answer
+            all_answers = [html.unescape(answer) for answer in question_data["incorrect_answers"]] + [correct_answer]
             random.shuffle(all_answers)
 
             choices = "\n".join([f"{i+1}. {answer}" for i, answer in enumerate(all_answers)])
 
-            return f"**Trivia Time!**\n{question}\n\n{choices}"
+            # Store the question and correct answer
+            global current_question, current_answer
+            current_question = question + "\n\n" + choices
+            current_answer = correct_answer
+
+            return f"**Trivia Time!**\n{current_question}"
 
         else:
             return "Couldn't fetch a trivia question. Try again!"
