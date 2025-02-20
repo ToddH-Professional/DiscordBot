@@ -49,6 +49,9 @@ async def trivia(ctx):
     trivia_text = fetch_trivia()
     await ctx.send(trivia_text)
 
+     # Wait for 10 seconds before starting the countdown
+    await asyncio.sleep(10)
+
     # Countdown from 5 to 1
     for i in range(5, 0, -1):
         await ctx.send(f"{i}...")
