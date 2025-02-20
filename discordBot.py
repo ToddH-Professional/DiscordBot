@@ -3,6 +3,7 @@ import os
 import requests
 import random
 import html
+import asyncio
 from discord.ext import commands, tasks
 
 # Load your bot token and API keys
@@ -43,20 +44,18 @@ async def get_quote(ctx):
     await ctx.send(f'"{quote}" - {author}')
 
 # Function to handle the `~trivia` command
-@bot.command(name="trivia")
+@bot.command()
 async def trivia(ctx):
-    """Fetch a random trivia question."""
     trivia_text = fetch_trivia()
     await ctx.send(trivia_text)
 
-# Function to handle the `~trivia-answer` command
-@bot.command(name="trivia-answer")
-async def trivia_answer(ctx):
-    """Fetch the answer the trivia question."""
-    if current_answer:
-        await ctx.send(f"The answer is: {current_answer}")
-    else:
-        await ctx.send("No trivia question has been asked yet!")
+    # Countdown from 5 to 1
+    for i in range(5, 0, -1):
+        await ctx.send(f"{i}...")
+        await asyncio.sleep(1)  # Wait for 1 second
+
+    # Send the correct answer after countdown
+    await ctx.send(f"The answer is: {current_answer}")
 
 #--------FUNCTIONS------------#
 
@@ -109,6 +108,10 @@ def fetch_quote():
     except requests.exceptions.RequestException as e:
         return f"An error occurred: {e}", ""
 
+# Function to get random trivia question
+# Variable to store the question and correct answer globally
+current_question = None
+current_answer = None
 def fetch_trivia():
     url = "https://opentdb.com/api.php?amount=1&type=multiple"
     
